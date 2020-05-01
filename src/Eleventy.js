@@ -17,8 +17,6 @@ const config = require("./Config");
 const bench = require("./BenchmarkManager");
 const debug = require("debug")("Eleventy");
 
-const EventEmitter = require("events");
-
 /**
  * @module @11ty/eleventy/Eleventy
  */
@@ -94,10 +92,6 @@ class Eleventy {
     this.watchTargets = new EleventyWatchTargets();
     this.watchTargets.addAndMakeGlob(this.config.additionalWatchTargets);
     this.watchTargets.watchJavaScriptDependencies = this.config.watchJavaScriptDependencies;
-
-    /** @member {Emitter} - Status emitter for Eleventy */
-    class EleventyBuildStatus extends EventEmitter {}
-    this.buildStatus = new EleventyBuildStatus();
   }
 
   getNewTimestamp() {
@@ -742,13 +736,13 @@ Arguments:
       EleventyErrorHandler.logger = this.logger;
     }
 
-    this.buildStatus.emit("start");
+    this.config.events.emit("beforeBuild");
 
     try {
       let promise = this.writer.write();
 
       ret = await promise;
-      this.buildStatus.emit("done");
+      this.config.events.emit("afterBuild");
     } catch (e) {
       EleventyErrorHandler.initialMessage(
         "Problem writing Eleventy templates",
